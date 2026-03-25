@@ -4,10 +4,16 @@
  */
 
 #include "thread_scanner.h"
+#include "crypto.h"
 
+#include <inttypes.h>
 #include <string.h>
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "frame_parser.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "mbedtls/cmac.h"
 
 static const char *TAG = "thread_scanner";
 
