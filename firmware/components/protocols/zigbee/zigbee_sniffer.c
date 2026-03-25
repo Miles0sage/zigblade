@@ -128,9 +128,9 @@ static bool try_decrypt_nwk(parsed_frame_t *frame)
     /* Use source IEEE address from NWK header (extended nonce) */
     uint8_t *src_ieee = frame->nwk.src_ieee;
 
-    /* Build AAD: the NWK header bytes before the encrypted payload */
-    const uint8_t *aad = frame->mac_payload;
-    uint16_t aad_len = frame->nwk.header_len;
+    /* Build AAD: MAC header + NWK header (Zigbee spec section 4.5.2.3) */
+    const uint8_t *aad = frame->raw;
+    uint16_t aad_len = frame->mac.header_len + frame->nwk.header_len;
 
     /* Try each key */
     for (uint8_t k = 0; k < s_key_count; k++) {
@@ -287,7 +287,7 @@ esp_err_t zigbee_sniffer_start(uint8_t channel)
         if (s_mutex == NULL) return ESP_ERR_NO_MEM;
     }
     if (s_rx_queue == NULL) {
-        s_rx_queue = xQueueCreate(64, sizeof(sniffer_rx_item_t));
+        s_rx_queue = xQueueCreate(32, sizeof(sniffer_rx_item_t));
         if (s_rx_queue == NULL) return ESP_ERR_NO_MEM;
     }
 

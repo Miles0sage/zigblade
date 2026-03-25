@@ -107,33 +107,31 @@ esp_err_t display_init(void)
     /*
      * SH1106 initialisation sequence.
      * Based on the SH1106 datasheet recommended settings for 128x64.
+     * Single-byte commands use sh1106_send_cmd(); two-byte commands
+     * (command + argument) use sh1106_send_cmd2() so both bytes are
+     * sent in the same I2C transaction as required by the SH1106.
      */
-    const uint8_t init_cmds[] = {
-        0xAE,       /* Display OFF                                      */
-        0xD5, 0x80, /* Set display clock div: default ratio             */
-        0xA8, 0x3F, /* Set multiplex ratio: 64-1 = 0x3F                */
-        0xD3, 0x00, /* Set display offset: 0                           */
-        0x40,       /* Set start line: 0                                */
-        0xAD, 0x8B, /* Set DC-DC: internal DC-DC enabled (8B)          */
-        0xA1,       /* Set segment remap: column 127 = SEG0            */
-        0xC8,       /* Set COM scan direction: remapped (C8 = reverse) */
-        0xDA, 0x12, /* Set COM pins config: alternative, no remap      */
-        0x81, 0xCF, /* Set contrast: 0xCF                              */
-        0xD9, 0xF1, /* Set pre-charge period: phase1=1, phase2=15     */
-        0xDB, 0x40, /* Set VCOMH deselect level: ~0.77×Vcc             */
-        0xA4,       /* Entire display ON follows RAM content           */
-        0xA6,       /* Set normal display (not inverted)               */
-        0xAF,       /* Display ON                                      */
-    };
+#define INIT_CMD(c)      do { ret = sh1106_send_cmd((c));       if (ret != ESP_OK) { ESP_LOGE(TAG, "SH1106 init cmd 0x%02X failed: %s", (c), esp_err_to_name(ret)); return ret; } } while (0)
+#define INIT_CMD2(c, a)  do { ret = sh1106_send_cmd2((c), (a)); if (ret != ESP_OK) { ESP_LOGE(TAG, "SH1106 init cmd 0x%02X failed: %s", (c), esp_err_to_name(ret)); return ret; } } while (0)
 
-    for (size_t i = 0; i < sizeof(init_cmds); i++) {
-        /* Commands with a parameter byte: 0xD5, 0xA8, 0xD3, 0xAD, 0xDA, 0x81, 0xD9, 0xDB */
-        ret = sh1106_send_cmd(init_cmds[i]);
-        if (ret != ESP_OK) {
-            ESP_LOGE(TAG, "SH1106 init cmd 0x%02X failed: %s", init_cmds[i], esp_err_to_name(ret));
-            return ret;
-        }
-    }
+    INIT_CMD (0xAE);        /* Display OFF                                      */
+    INIT_CMD2(0xD5, 0x80);  /* Set display clock div: default ratio             */
+    INIT_CMD2(0xA8, 0x3F);  /* Set multiplex ratio: 64-1 = 0x3F                */
+    INIT_CMD2(0xD3, 0x00);  /* Set display offset: 0                           */
+    INIT_CMD (0x40);        /* Set start line: 0                                */
+    INIT_CMD2(0xAD, 0x8B);  /* Set DC-DC: internal DC-DC enabled (8B)          */
+    INIT_CMD (0xA1);        /* Set segment remap: column 127 = SEG0            */
+    INIT_CMD (0xC8);        /* Set COM scan direction: remapped (C8 = reverse) */
+    INIT_CMD2(0xDA, 0x12);  /* Set COM pins config: alternative, no remap      */
+    INIT_CMD2(0x81, 0xCF);  /* Set contrast: 0xCF                              */
+    INIT_CMD2(0xD9, 0xF1);  /* Set pre-charge period: phase1=1, phase2=15     */
+    INIT_CMD2(0xDB, 0x40);  /* Set VCOMH deselect level: ~0.77×Vcc             */
+    INIT_CMD (0xA4);        /* Entire display ON follows RAM content           */
+    INIT_CMD (0xA6);        /* Set normal display (not inverted)               */
+    INIT_CMD (0xAF);        /* Display ON                                      */
+
+#undef INIT_CMD
+#undef INIT_CMD2
 
     memset(s_framebuf, 0x00, sizeof(s_framebuf));
     s_initialised = true;

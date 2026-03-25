@@ -135,10 +135,10 @@ esp_err_t zigblade_radio_init(void)
         return err;
     }
 
-    /* Set promiscuous mode so we receive all frames */
+    /* Set promiscuous mode — receives all frames and disables auto-ACK implicitly */
     esp_ieee802154_set_promiscuous(true);
 
-    /* Disable auto-ACK — we are a passive sniffer / active injector */
+    /* Keep radio in RX when idle */
     esp_ieee802154_set_rx_when_idle(true);
 
     /* Default channel */
@@ -244,7 +244,7 @@ esp_err_t zigblade_radio_transmit(uint8_t *frame, uint8_t len)
     if (frame == NULL || len == 0) {
         return ESP_ERR_INVALID_ARG;
     }
-    if (len > ZIGBLADE_MAX_FRAME_LEN + 1) { /* +1 for PHY length byte */
+    if (len > 126) { /* max 125-byte MPDU + 1 PHY length byte = 126 */
         ESP_LOGE(TAG, "Frame too long: %d bytes", len);
         return ESP_ERR_INVALID_ARG;
     }
