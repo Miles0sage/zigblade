@@ -1,0 +1,2 @@
+source /root/zigblade/firmware/build/bootloader/gdbinit/symbols
+source /root/zigblade/firmware/build/bootloader/gdbinit/connect

@@ -3,5 +3,5 @@ idf_component_register(
          "pcap_writer.c"
          "crypto.c"
     INCLUDE_DIRS "."
-    REQUIRES esp_common log mbedtls
+    REQUIRES mbedtls fatfs
 )

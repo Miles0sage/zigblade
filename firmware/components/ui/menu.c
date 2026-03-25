@@ -4,6 +4,7 @@
 
 #include "menu.h"
 #include "display.h"
+#include "font5x7.h"
 
 #include <string.h>
 #include "esp_log.h"

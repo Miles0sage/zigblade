@@ -234,7 +234,6 @@ static esp_err_t init_led(void)
     const led_strip_config_t strip_cfg = {
         .strip_gpio_num   = PIN_LED,
         .max_leds         = 1,
-        .led_pixel_format = LED_PIXEL_FORMAT_GRB,
         .led_model        = LED_MODEL_WS2812,
     };
 

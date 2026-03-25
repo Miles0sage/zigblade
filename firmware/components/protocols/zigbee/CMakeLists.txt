@@ -3,5 +3,5 @@ idf_component_register(
          "zigbee_sniffer.c"
          "zigbee_injector.c"
     INCLUDE_DIRS "."
-    REQUIRES hal common freertos esp_common esp_timer log
+    REQUIRES zigblade_hal common freertos esp_timer
 )

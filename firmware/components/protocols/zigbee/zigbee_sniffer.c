@@ -142,7 +142,7 @@ static bool try_decrypt_nwk(parsed_frame_t *frame)
         zigbee_derive_nonce(src_ieee, frame->nwk.sec_frame_counter,
                            frame->nwk.sec_level, nonce);
 
-        esp_err_t err = zigblade_aes_ccm_decrypt(
+        esp_err_t err = zigbee_aes_ccm_decrypt(
             s_keys[k], nonce, temp, payload_len,
             aad, aad_len, mic_ptr, mic_length);
 

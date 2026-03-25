@@ -11,7 +11,11 @@ idf_component_register(
         led_strip
         ieee802154
         freertos
-        esp_log
         spi_flash
         vfs
+    PRIV_REQUIRES
+        zigblade_hal
+        zigbee
+        common
+        ui
 )
