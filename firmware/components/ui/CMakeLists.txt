@@ -1,0 +1,13 @@
+idf_component_register(
+    SRCS
+        "display.c"
+        "menu.c"
+        "screens.c"
+    INCLUDE_DIRS
+        "."
+    REQUIRES
+        driver
+        esp_timer
+        freertos
+        esp_system
+)
