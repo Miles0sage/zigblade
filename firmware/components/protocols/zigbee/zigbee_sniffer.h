@@ -17,6 +17,20 @@ extern "C" {
 
 /** Maximum keys the sniffer can hold for decryption attempts. */
 #define SNIFFER_MAX_KEYS    8
+#define ZIGBEE_SNIFFER_AUTO_CHANNEL 0
+#define ZIGBEE_SNIFFER_DEFAULT_HOP_MS 250
+
+typedef struct {
+    uint32_t total_packets;
+    uint32_t packets_per_sec;
+    uint32_t unique_devices;
+    uint32_t zigbee_packets;
+    uint32_t thread_packets;
+    uint32_t matter_packets;
+    uint32_t unknown_packets;
+    uint8_t  current_channel;
+    bool     channel_hopping;
+} zigbee_sniffer_stats_t;
 
 /** Captured packet with decoded metadata */
 typedef struct {
@@ -44,6 +58,13 @@ typedef void (*zigbee_sniffer_callback_t)(const captured_packet_t *pkt);
  * @return ESP_OK on success.
  */
 esp_err_t zigbee_sniffer_start(uint8_t channel);
+
+/**
+ * @brief Start sniffing with round-robin channel hopping across channels 11-26.
+ *
+ * @return ESP_OK on success.
+ */
+esp_err_t zigbee_sniffer_start_auto_hop(void);
 
 /**
  * @brief Stop sniffing and release resources.
@@ -105,6 +126,14 @@ esp_err_t zigbee_sniffer_enable_pcap(const char *filepath);
  * @return ESP_OK.
  */
 esp_err_t zigbee_sniffer_register_callback(zigbee_sniffer_callback_t cb);
+
+/**
+ * @brief Retrieve the current capture statistics snapshot.
+ *
+ * @param[out] stats Output structure.
+ * @return ESP_OK on success.
+ */
+esp_err_t zigbee_sniffer_get_stats(zigbee_sniffer_stats_t *stats);
 
 /**
  * @brief Check if the sniffer is currently active.

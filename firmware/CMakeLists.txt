@@ -8,6 +8,9 @@ set(EXTRA_COMPONENT_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/components/zigblade_hal"
     "${CMAKE_CURRENT_SOURCE_DIR}/components/protocols/common"
     "${CMAKE_CURRENT_SOURCE_DIR}/components/protocols/zigbee"
+    "${CMAKE_CURRENT_SOURCE_DIR}/components/protocols/thread"
+    "${CMAKE_CURRENT_SOURCE_DIR}/components/protocols/matter"
+    "${CMAKE_CURRENT_SOURCE_DIR}/components/protocols/wifi"
     "${CMAKE_CURRENT_SOURCE_DIR}/components/ui"
 )
 

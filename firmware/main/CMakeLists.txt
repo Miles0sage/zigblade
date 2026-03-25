@@ -16,6 +16,9 @@ idf_component_register(
     PRIV_REQUIRES
         zigblade_hal
         zigbee
+        thread
+        matter
+        wifi
         common
         ui
 )

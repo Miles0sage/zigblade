@@ -1,0 +1,11 @@
+idf_component_register(
+    SRCS
+        "thread_scanner.c"
+        "thread_sniffer.c"
+    INCLUDE_DIRS
+        "."
+    REQUIRES
+        common
+        freertos
+        esp_timer
+)

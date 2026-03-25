@@ -150,14 +150,14 @@ esp_err_t zigbee_aes_ccm_encrypt(const uint8_t *key,
 
 /* ── AES-128 CCM* decrypt ─────────────────────────────────────────── */
 
-esp_err_t zigblade_aes_ccm_decrypt(const uint8_t *key,
-                                   const uint8_t *nonce,
-                                   uint8_t *payload,
-                                   uint16_t len,
-                                   const uint8_t *aad,
-                                   uint16_t aad_len,
-                                   const uint8_t *mic,
-                                   uint8_t mic_len)
+esp_err_t zigbee_aes_ccm_decrypt(const uint8_t *key,
+                                 const uint8_t *nonce,
+                                 uint8_t *payload,
+                                 uint16_t len,
+                                 const uint8_t *aad,
+                                 uint16_t aad_len,
+                                 const uint8_t *mic,
+                                 uint8_t mic_len)
 {
     if (key == NULL || nonce == NULL) {
         return ESP_ERR_INVALID_ARG;
