@@ -10,9 +10,11 @@
 #include "zigbee_injector.h"
 #include "ieee802154_hal.h"
 #include "frame_parser.h"
+#include "crypto.h"
 
 #include <string.h>
 #include "esp_log.h"
+#include "esp_timer.h"
 
 static const char *TAG = "zigbee_injector";
 

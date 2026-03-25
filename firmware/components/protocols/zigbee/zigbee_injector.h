@@ -101,6 +101,79 @@ esp_err_t zigbee_inject_disassoc(uint16_t target_short,
  */
 uint32_t zigbee_injector_get_tx_count(void);
 
+/* ── Frame-counter-aware replay (Weakness 2 fix) ────────────────── */
+
+/** Maximum devices whose frame counters we can track simultaneously. */
+#define INJECTOR_FC_TRACK_MAX   32
+
+/** Tracked frame counter entry for a device */
+typedef struct {
+    uint16_t short_addr;             /**< Device short address            */
+    uint8_t  ext_addr[8];           /**< Device IEEE address (for nonce) */
+    bool     ext_addr_valid;         /**< ext_addr is populated          */
+    uint32_t last_frame_counter;     /**< Highest frame counter seen     */
+    uint16_t panid;                  /**< PAN ID of the device           */
+} fc_track_entry_t;
+
+/**
+ * @brief Update the tracked frame counter for a device.
+ *
+ * Called automatically by the sniffer callback when integrated, or
+ * manually when processing captured packets.
+ *
+ * @param short_addr   Device short address.
+ * @param panid        PAN ID.
+ * @param ext_addr     8-byte IEEE address (may be NULL if unknown).
+ * @param frame_counter Observed frame counter value.
+ * @return ESP_OK on success, ESP_ERR_NO_MEM if tracking table is full.
+ */
+esp_err_t zigbee_injector_track_frame_counter(uint16_t short_addr,
+                                              uint16_t panid,
+                                              const uint8_t *ext_addr,
+                                              uint32_t frame_counter);
+
+/**
+ * @brief Get the last seen frame counter for a device.
+ *
+ * @param short_addr   Device short address.
+ * @param panid        PAN ID.
+ * @param[out] fc_out  Output frame counter value.
+ * @return ESP_OK if found, ESP_ERR_NOT_FOUND if not tracked.
+ */
+esp_err_t zigbee_injector_get_frame_counter(uint16_t short_addr,
+                                            uint16_t panid,
+                                            uint32_t *fc_out);
+
+/**
+ * @brief Replay a captured packet with frame counter manipulation.
+ *
+ * For modern devices that use frame counter validation:
+ * 1. Looks up the target device's last seen frame counter
+ * 2. Increments it by `fc_increment`
+ * 3. Patches the frame counter in the NWK security header
+ * 4. Re-encrypts the modified frame with the provided network key
+ * 5. Transmits the modified frame
+ *
+ * This defeats frame-counter-based replay protection on devices where
+ * the network key is known (e.g. extracted via sniffing or install
+ * code attack).
+ *
+ * @param pkt           Captured packet to replay.
+ * @param network_key   16-byte network key for re-encryption.
+ * @param fc_increment  Amount to add to the tracked counter (typically 1).
+ * @return ESP_OK on success.
+ */
+esp_err_t zigbee_inject_replay_with_counter(const captured_packet_t *pkt,
+                                            const uint8_t *network_key,
+                                            uint32_t fc_increment);
+
+/**
+ * @brief Clear all tracked frame counters.
+ *
+ * @return ESP_OK.
+ */
+esp_err_t zigbee_injector_clear_frame_counters(void);
+
 #ifdef __cplusplus
 }
 #endif
