@@ -1,1 +1,9 @@
-build/\nsdkconfig\nsdkconfig.old\n*.pyc\n__pycache__/\n.vscode/\n*.pcap\n
+build/
+sdkconfig
+sdkconfig.old
+*.pyc
+__pycache__/
+.vscode/
+*.pcap
+managed_components/
+dependencies.lock
