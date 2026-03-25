@@ -1,0 +1,19 @@
+idf_component_register(
+    SRCS
+        "main.c"
+        "uart_master.c"
+        "ui_tembed.c"
+        "input.c"
+        "web_ui.c"
+    INCLUDE_DIRS "."
+    REQUIRES
+        driver
+        esp_event
+        esp_http_server
+        esp_netif
+        esp_timer
+        esp_wifi
+        freertos
+        led_strip
+        nvs_flash
+)
