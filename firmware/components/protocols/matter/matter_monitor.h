@@ -52,6 +52,75 @@ esp_err_t matter_monitor_build_deedos_probe(uint8_t *buffer,
                                             size_t buffer_len,
                                             size_t *probe_len);
 
+/* ── Active Matter attacks (Weakness 3 fix) ──────────────────────── */
+
+/** Maximum TLV fuzzer payload length */
+#define MATTER_FUZZ_MAX_LEN     96
+
+/** ACL lockout test result */
+typedef struct {
+    bool     vulnerable;             /**< true if WriteAcl succeeded     */
+    uint16_t target_session_id;      /**< Session tested                 */
+    uint32_t probe_counter;          /**< Message counter used           */
+    uint8_t  response[64];           /**< Raw response bytes             */
+    uint8_t  response_len;           /**< Response length                */
+} matter_acl_result_t;
+
+/** Fuzzer test case */
+typedef struct {
+    uint8_t  payload[MATTER_FUZZ_MAX_LEN];
+    uint8_t  payload_len;
+    uint8_t  fuzz_type;              /**< 0=random, 1=boundary, 2=overflow */
+    uint16_t target_session_id;
+    uint32_t message_counter;
+} matter_fuzz_case_t;
+
+/**
+ * @brief Test for CVE WriteAcl vulnerability (ACL lockout).
+ *
+ * Constructs a Matter IM WriteRequest targeting the AccessControl
+ * cluster (0x001F) to write a restrictive ACL that locks out the
+ * legitimate administrator.  This tests whether the device properly
+ * validates WriteAcl permissions.
+ *
+ * @param[out] buffer      Output buffer for the probe frame.
+ * @param[in]  buffer_len  Buffer capacity.
+ * @param[out] probe_len   Actual probe length written.
+ * @param[in]  session_id  Target session ID from monitoring.
+ * @param[in]  msg_counter Message counter (should be > last seen).
+ * @param[out] result      Test result (set vulnerable flag after
+ *                          observing the device's response separately).
+ * @return ESP_OK on success.
+ */
+esp_err_t matter_acl_lockout_test(uint8_t *buffer,
+                                  size_t buffer_len,
+                                  size_t *probe_len,
+                                  uint16_t session_id,
+                                  uint32_t msg_counter,
+                                  matter_acl_result_t *result);
+
+/**
+ * @brief Generate a fuzzed Matter TLV message.
+ *
+ * Creates malformed Matter protocol messages with various fuzzing
+ * strategies to test device robustness:
+ *   - Type 0: Random bytes in TLV structure
+ *   - Type 1: Boundary values (0, 0xFF, 0xFFFF, max lengths)
+ *   - Type 2: Overflow payloads (oversized TLV lengths)
+ *
+ * @param[out] fuzz_case   Output fuzz case with payload.
+ * @param[in]  fuzz_type   Fuzzing strategy (0, 1, or 2).
+ * @param[in]  session_id  Target session ID.
+ * @param[in]  msg_counter Message counter to use.
+ * @param[in]  seed        Random seed for reproducibility.
+ * @return ESP_OK on success.
+ */
+esp_err_t matter_fuzzer(matter_fuzz_case_t *fuzz_case,
+                        uint8_t fuzz_type,
+                        uint16_t session_id,
+                        uint32_t msg_counter,
+                        uint32_t seed);
+
 #ifdef __cplusplus
 }
 #endif

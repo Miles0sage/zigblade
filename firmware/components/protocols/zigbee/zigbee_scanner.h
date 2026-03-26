@@ -23,6 +23,13 @@ extern "C" {
 /** Per-channel dwell time during a full scan (milliseconds). */
 #define ZIGBEE_SCAN_DWELL_MS        500
 
+/** Security assessment for a discovered network */
+typedef enum {
+    ZB_ASSESS_UNKNOWN    = 0,           /**< Cannot determine             */
+    ZB_ASSESS_VULNERABLE = 1,           /**< Weak security / open join    */
+    ZB_ASSESS_HARDENED   = 2,           /**< Install codes / Zigbee 3.0   */
+} zigbee_security_assessment_t;
+
 /** Discovered Zigbee network descriptor */
 typedef struct {
     uint16_t pan_id;                    /**< PAN identifier              */
@@ -39,6 +46,15 @@ typedef struct {
     int8_t   rssi;                      /**< Strongest beacon RSSI       */
     uint8_t  device_count;              /**< Unique devices heard        */
     uint32_t last_seen_ms;              /**< Tick of last beacon/frame   */
+
+    /* ── Zigbee 3.0 / install code detection (Weakness 4 fix) ──── */
+    bool     is_zigbee_3_0;            /**< Zigbee 3.0 identified       */
+    uint8_t  nwk_update_id;            /**< NWK update ID from beacon   */
+    bool     install_code_required;    /**< Install code joining needed  */
+    bool     centralized_tc;           /**< Centralized trust center    */
+    bool     distributed_tc;           /**< Distributed trust center    */
+    uint8_t  security_level;           /**< NWK security level (0-7)    */
+    zigbee_security_assessment_t assessment; /**< Security assessment   */
 } zigbee_network_t;
 
 /** Scan result set */
@@ -96,6 +112,14 @@ const zigbee_scan_result_t *zigbee_scan_get_results(void);
  * @return ESP_OK.
  */
 esp_err_t zigbee_scan_clear(void);
+
+/**
+ * @brief Return a human-readable string for a security assessment.
+ *
+ * @param assessment  Assessment value.
+ * @return Static string: "VULNERABLE", "HARDENED", or "UNKNOWN".
+ */
+const char *zigbee_assessment_str(zigbee_security_assessment_t assessment);
 
 #ifdef __cplusplus
 }

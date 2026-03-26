@@ -8,4 +8,5 @@ idf_component_register(
         common
         freertos
         esp_timer
+        mbedtls
 )

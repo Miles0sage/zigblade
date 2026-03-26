@@ -107,6 +107,49 @@ static void parse_beacon(const uint8_t *payload, uint8_t payload_len,
     /* bit 7: security */
     bool security = (cap_byte >> 2) & 0x01;  /* Zigbee 3.0: security bit */
 
+    /* ── Zigbee 3.0 / install code detection ─────────────────── */
+
+    /*
+     * Zigbee 3.0 identification:
+     *   - Stack profile 2 + NWK protocol version >= 2
+     *   - nwk_version 3 or higher is Zigbee 3.0+
+     *   - Zigbee 3.0 mandates centralized trust center with install codes
+     *     when the TC policy requires it (indicated by security bit + join policy)
+     *
+     * Beacon payload byte layout:
+     *   zb[2] bits: bit 0 = router capacity
+     *               bit 2 = security (requires install code if Zigbee 3.0)
+     *   zb[3] bits: bit 0 = end device capacity
+     *               bits 1-4 = device depth
+     *               bit 7 = reserved / extended flag
+     *
+     * The Trust Center policy cannot be directly read from the beacon,
+     * but we can infer it:
+     *   - Zigbee 3.0 + security + association NOT permitted = install code mode
+     *   - Zigbee 3.0 + security + association permitted = may accept default key
+     *   - No security = open network
+     */
+    bool is_zigbee_3_0 = (stack_profile == 2 && nwk_version >= 3);
+
+    /* If stack profile is 2 and version is 2, it's Zigbee Pro (pre-3.0)
+       which generally uses the default ZigBeeAlliance09 key */
+    bool install_code_likely = false;
+    if (is_zigbee_3_0 && security && !assoc_permit) {
+        /* Zigbee 3.0 with security but joining disabled = install code mode.
+           Devices must be pre-provisioned with install codes. */
+        install_code_likely = true;
+    }
+
+    /* Trust center type heuristic from stack profile */
+    bool centralized_tc = (stack_profile == 2); /* Zigbee Pro = centralized */
+    bool distributed_tc = (stack_profile == 1); /* Zigbee LL / distributed */
+
+    /* NWK Update ID (at zb[15] if beacon payload is long enough) */
+    uint8_t nwk_update_id = 0;
+    if (zb_len >= 16) {
+        nwk_update_id = zb[15];
+    }
+
     /* Extended PAN ID at zb[4..11] — informational, not used for filtering */
 
     /* ── Store or update network entry ────────────────────────── */
