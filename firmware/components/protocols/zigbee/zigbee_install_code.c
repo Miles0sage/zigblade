@@ -10,6 +10,7 @@
 #include "zigbee_install_code.h"
 #include "crypto.h"
 
+#include <inttypes.h>
 #include <string.h>
 #include "esp_log.h"
 #include "esp_timer.h"

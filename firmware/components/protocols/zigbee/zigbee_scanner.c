@@ -186,6 +186,28 @@ static void parse_beacon(const uint8_t *payload, uint8_t payload_len,
         net->end_device_capacity = end_dev_cap;
         net->last_seen_ms       = (uint32_t)(esp_timer_get_time() / 1000);
 
+        /* Zigbee 3.0 / install code fields */
+        net->is_zigbee_3_0          = is_zigbee_3_0;
+        net->nwk_update_id          = nwk_update_id;
+        net->install_code_required  = install_code_likely;
+        net->centralized_tc         = centralized_tc;
+        net->distributed_tc         = distributed_tc;
+
+        /* Compute security assessment */
+        if (!security) {
+            net->assessment = ZB_ASSESS_VULNERABLE;
+        } else if (is_zigbee_3_0 && install_code_likely) {
+            net->assessment = ZB_ASSESS_HARDENED;
+        } else if (is_zigbee_3_0 && security && assoc_permit) {
+            /* Zigbee 3.0 with open joining — may accept default key fallback */
+            net->assessment = ZB_ASSESS_VULNERABLE;
+        } else if (security && !is_zigbee_3_0) {
+            /* Pre-3.0 with security — uses default key (ZigBeeAlliance09) */
+            net->assessment = ZB_ASSESS_VULNERABLE;
+        } else {
+            net->assessment = ZB_ASSESS_UNKNOWN;
+        }
+
         if (rssi > net->rssi || net->rssi == 0) {
             net->rssi = rssi;
         }
@@ -194,6 +216,13 @@ static void parse_beacon(const uint8_t *payload, uint8_t payload_len,
             memcpy(net->coord_ext_addr, mac->src_ext_addr, 8);
             net->ext_addr_valid = true;
         }
+
+        ESP_LOGI(TAG, "Network PAN=0x%04X ch=%d: %s v%d sec=%d join=%d "
+                 "assessment=%s",
+                 net->pan_id, channel,
+                 is_zigbee_3_0 ? "ZB3.0" : "ZB-legacy",
+                 nwk_version, security, assoc_permit,
+                 zigbee_assessment_str(net->assessment));
     }
 
     xSemaphoreGive(s_results_mutex);
@@ -416,4 +445,14 @@ esp_err_t zigbee_scan_clear(void)
 
     ESP_LOGI(TAG, "Scan results cleared");
     return ESP_OK;
+}
+
+const char *zigbee_assessment_str(zigbee_security_assessment_t assessment)
+{
+    switch (assessment) {
+    case ZB_ASSESS_VULNERABLE: return "VULNERABLE";
+    case ZB_ASSESS_HARDENED:   return "HARDENED";
+    case ZB_ASSESS_UNKNOWN:
+    default:                   return "UNKNOWN";
+    }
 }

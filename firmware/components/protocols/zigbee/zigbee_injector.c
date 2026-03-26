@@ -557,7 +557,6 @@ esp_err_t zigbee_inject_replay_with_counter(const captured_packet_t *pkt,
 
     /* Check NWK security header for key source / source addr */
     uint8_t key_id_mode = (sec_ctrl >> 3) & 0x03;
-    uint8_t after_fc = fc_off + 4;
 
     if (key_id_mode == 0 || key_id_mode == 1) {
         /* Source address is 8 bytes after frame counter (if present) */
